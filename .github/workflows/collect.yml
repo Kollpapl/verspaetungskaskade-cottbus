@@ -1,13 +1,16 @@
 name: collect-delays
 
 on:
-  # Absichtlich (noch) OHNE scharfen Cron-Trigger. Erst zwei manuelle Läufe im echten
-  # Berufsverkehr (Werktag ca. 7:30 oder 15:30 Uhr) pruefen, ob der Feed unter Last
-  # sinnvolle, nicht-durchgehend-Null Verspaetungswerte liefert -- das ist der eigentliche
-  # zweite Health-Check, siehe ERKLAERUNG.md. Erst danach die Zeile unten einkommentieren:
-  #
-  # schedule:
-  #   - cron: "*/5 * * * *"
+  # Cron scharf seit 30.08.2026, 16:17 Uhr -- bewusst *jetzt* aktiviert statt zwei
+  # einzelne manuelle Laeufe praezise auf Feierabend-/Berufsverkehr zu timen (dafuer
+  # haette es eine externe Zeitsteuerung mit eigenem GitHub-Zugang gebraucht, unnoetiger
+  # Umweg). GitHub Actions' eigener Scheduler deckt so oder so beide Fenster ab -- den
+  # Sonntagabend, den Montag-Berufsverkehr ab 07:30 Uhr und alles dazwischen. Die ersten
+  # ~18h Rohdaten (data/raw/2026-08-3{0,1}.jsonl) sind der eigentliche Health-Check:
+  # zeigen die Verspaetungswerte unter echter Last plausible, von 0 abweichende Werte?
+  # Siehe ERKLAERUNG.md fuer die Auswertung dazu, sobald verfuegbar.
+  schedule:
+    - cron: "*/5 * * * *"
   workflow_dispatch:
 
 concurrency:
