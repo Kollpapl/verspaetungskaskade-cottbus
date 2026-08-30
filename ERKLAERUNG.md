@@ -87,4 +87,26 @@ Wichtige Erkenntnis vom Sonntagnachmittag-Check: der Feed lebt für Bus 16, aber
 
 **Cron scharf geschaltet (30.08.2026, 16:17 Uhr)** – mit einer Anpassung gegenüber dem ursprünglichen Plan: statt zwei einzeln von Hand getimte Läufe (hätte eine externe Zeitsteuerung mit eigenem GitHub-Zugang gebraucht, der hier nicht eingerichtet ist) einfach den Cron-Trigger selbst aktiviert. GitHub Actions' eigener Scheduler deckt Feierabendverkehr (heute Abend), Berufsverkehr (morgen ab 07:30 Uhr) und alles dazwischen automatisch ab, alle 5 Minuten – inhaltlich dasselbe Ergebnis wie die zwei geplanten Testläufe, nur ohne den Umweg. Die ersten ~18h Rohdaten (`data/raw/2026-08-30.jsonl` und `2026-08-31.jsonl`) sind der eigentliche Health-Check.
 
-**Noch offen / nächster Schritt:** Rohdaten nach Feierabend- und Berufsverkehr sichten – liefert Bus 16 unter echter Last plausible, von 0 abweichende Verspätungswerte? (`uv run build_sqlite.py` dann z.B. `SELECT DISTINCT arrival_delay FROM stop_updates WHERE arrival_delay != 0 LIMIT 20;`) Wenn ja, läuft die Dauersammlung einfach weiter – Cron ist schon aktiv, nichts weiter zu tun. Wenn die Werte durchgehend 0 oder unplausibel bleiben, Cron wieder auskommentieren und Linie/Ansatz überdenken.
+## Problem entdeckt: Cron feuert nicht von selbst
+
+**Befund (30.08.2026, laufend seit 16:17 Uhr geprüft):** Der Cron-Trigger (`*/5 * * * *`) hat über 2 Stunden lang (~24 mögliche 5-Minuten-Zeitpunkte) **keinen einzigen automatischen Lauf ausgelöst** – geprüft über `gh api repos/.../actions/runs --jq '.workflow_runs[] | select(.event=="schedule")'`, durchgehend leer. GitHub-Statusseite zeigt keine Störung, die Workflow-Datei ist auf GitHub korrekt (Schedule nicht auskommentiert), Actions ist aktiviert – die Ursache ist damit noch nicht gefunden. Ein bekanntes, dokumentiertes GitHub-Verhalten ist, dass `schedule`-Events bei hoher Systemlast verzögert werden können (laut GitHub-Doku bis zu ~1 Stunde), aber 2+ Stunden ganz ohne einen einzigen Lauf geht darüber hinaus. **Das ist ein ungelöstes Problem, kein erledigter Haken** – für die eigentliche mehrwöchige Dauersammlung muss das noch gefixt werden (mögliche nächste Schritte: Workflow-Datei nochmal mit trivialer Änderung neu pushen, ob das den Scheduler "aufweckt"; alternative Trigger-Mechanismen wie ein externer Cron-Dienst, der per `repository_dispatch` anstößt; GitHub-Support/Community-Forum nach ähnlichen Fällen durchsuchen).
+
+**Übergangslösung:** Bis das geklärt ist, werden die Rush-Hour-Checks manuell per `gh workflow run collect.yml -R Kollpapl/verspaetungskaskade-cottbus` nachgebildet (mehrere Läufe im Abstand von ~6-8 Minuten über das jeweilige Zeitfenster verteilt).
+
+## Checkpoint 1: Feierabendverkehr (30.08.2026, 18:11–18:32 Uhr) – Ergebnis: Feed liefert echtes Signal
+
+Vier Läufe manuell ausgelöst (18:11, 18:17, 18:25, 18:32 Uhr), macht in Summe 507 Haltestellen-Updates über 4 Snapshots für Bus 16. Auswertung (`build_sqlite.py` + SQL):
+
+- **80 von 507 Updates (≈16%) zeigen einen von 0 abweichenden Verspätungswert** – Werte reichen von 61 bis 255 Sekunden (ca. 1-4 Minuten), alle klar innerhalb der plausiblen ±25-Minuten-Grenze. Kein einziger unplausibler Ausreißer (wie die andernorts gemeldeten -30-Minuten-Fälle).
+- Die übrigen ~84% zeigen exakt 0 – nachvollziehbar, die meisten Fahrten sind pünktlich, das ist kein Zeichen für einen kaputten Feed.
+- Einzelne Fahrten zeigen denselben Verspätungswert konsistent über mehrere aufeinanderfolgende Haltestellen (z.B. durchgehend 68s bei einer Fahrt über 3 Snapshots hinweg) – das ist normales GTFS-RT-Verhalten (eine einmal gemeldete Verspätung wird für nachfolgende Haltestellen fortgeschrieben, wenn keine neue Korrektur vorliegt), kein Datenfehler.
+
+**Fazit Checkpoint 1: Bus 16 liefert unter echter Last plausible, echte Verspätungssignale – der eigentliche Zweck des Health-Checks ist erfüllt.** Die Linienwahl (Bus 16 statt der toten Cottbus-Trams) ist damit inhaltlich bestätigt, unabhängig vom noch ungelösten Cron-Problem.
+
+## Checkpoint 2: Berufsverkehr (ausstehend)
+
+Geplant für morgen (31.08.2026) ca. 07:15–07:45 Uhr, gleiches Vorgehen (manuelle Läufe, da Cron noch nicht zuverlässig).
+
+**Noch offen / nächste Schritte:**
+1. Checkpoint 2 morgen früh durchführen und auswerten.
+2. Cron-Problem klären, bevor die eigentliche mehrwöchige Dauersammlung wirklich unbeaufsichtigt laufen kann – aktuell würde ohne manuelles Nachhelfen praktisch nichts gesammelt.
