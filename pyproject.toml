@@ -1,0 +1,10 @@
+[project]
+name = "verspaetungskaskade-cottbus"
+version = "0.1.0"
+description = "Add your description here"
+requires-python = ">=3.14"
+dependencies = [
+    "gtfs-realtime-bindings>=2.2.0",
+    "pandas>=3.0.5",
+    "requests>=2.34.2",
+]

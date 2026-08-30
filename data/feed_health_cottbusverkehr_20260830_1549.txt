@@ -1,0 +1,60 @@
+Frage https://production.gtfsrt.vbb.de/data ab ...
+Feed-Timestamp: 1788097760, 7115 Eintraege insgesamt.
+
+Stand 15:49:37, 45 Routen fuer agency_id=516:
+
+ route_id kurzname typ  im_live_feed  fahrten_geplant_15:29-16:09
+21205_700      EV1 700          True                            3
+15624_700       10 700          True                            2
+13136_700       47 700          True                            1
+13133_700       44 700          True                            2
+13113_700       21 700          True                            1
+13110_700       19 700          True                            2
+13108_700       16 700          True                            5
+13107_700       15 700          True                            0
+13106_700       13 700          True                            2
+29195_700       40 700         False                            0
+21619_700       2N 700         False                            0
+21454_700       45 700         False                            0
+21159_700        9 700         False                            0
+17541_700       4N 700         False                            0
+17540_700       3N 700         False                            0
+15029_700       48 700         False                            0
+15027_700       34 700         False                            0
+15026_700       30 700         False                            0
+15025_700       28 700         False                            0
+15024_700       24 700         False                            0
+15020_700       14 700         False                            0
+14979_700       38 700         False                            0
+13443_700       17 700         False                            1
+13134_700       46 700         False                            0
+13132_700       43 700         False                            0
+13131_700       42 700         False                            0
+13127_700       39 700         False                            0
+13126_700       37 700         False                            1
+13125_700       35 700         False                            0
+13123_700       33 700         False                            0
+13122_700       32 700         False                            0
+13120_700       29 700         False                            0
+13119_700       27 700         False                            0
+13118_700       26 700         False                            0
+13116_700       25 700         False                            0
+13115_700       23 700         False                            0
+13114_700       22 700         False                            0
+13111_700       20 700         False                            0
+13109_700       18 700         False                            0
+13105_700       12 700         False                            1
+13104_700       11 700         False                            0
+12891_900        4 900         False                            6
+12890_900        3 900         False                            6
+12889_900        2 900         False                            4
+12888_900        1 900         False                            0
+
+36/45 Routen fehlen im Live-Feed. Davon 6 mit laut Fahrplan gerade aktiven Fahrten (also mutmasslich echte Feed-Luecke, keine Betriebspause):
+ route_id kurzname typ  im_live_feed  fahrten_geplant_15:29-16:09
+13443_700       17 700         False                            1
+13126_700       37 700         False                            1
+13105_700       12 700         False                            1
+12891_900        4 900         False                            6
+12890_900        3 900         False                            6
+12889_900        2 900         False                            4

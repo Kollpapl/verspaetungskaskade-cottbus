@@ -1,0 +1,18 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Statisches GTFS-ZIP (~80 MB, jederzeit neu von vbb.de/vbbgtfs ladbar) -- NICHT ignoriert:
+# data/raw/*.jsonl (die eigentlich gesammelten Rohdaten, die soll der Actions-Workflow committen)
+data/gtfs.zip
+
+# Aus den JSONL-Rohdaten lokal gebaute SQLite-DB (reproduzierbar, siehe build_sqlite.py)
+*.sqlite
+*.sqlite3

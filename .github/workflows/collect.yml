@@ -1,0 +1,31 @@
+name: collect-delays
+
+on:
+  # Absichtlich (noch) OHNE scharfen Cron-Trigger. Erst zwei manuelle Läufe im echten
+  # Berufsverkehr (Werktag ca. 7:30 oder 15:30 Uhr) pruefen, ob der Feed unter Last
+  # sinnvolle, nicht-durchgehend-Null Verspaetungswerte liefert -- das ist der eigentliche
+  # zweite Health-Check, siehe ERKLAERUNG.md. Erst danach die Zeile unten einkommentieren:
+  #
+  # schedule:
+  #   - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: collector
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+      - run: uv sync
+      - run: uv run collect_delays.py
+      - run: |
+          git config user.name "collector-bot"
+          git config user.email "actions@github.com"
+          git add data/raw/
+          git diff --staged --quiet || git commit -m "snapshot $(date -u +%Y-%m-%dT%H:%M)"
+          git pull --rebase
+          git push
