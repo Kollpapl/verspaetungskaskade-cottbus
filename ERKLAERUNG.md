@@ -127,6 +127,20 @@ Geplant war 07:15–07:45 Uhr mit denselben manuellen Mehrfach-Läufen wie bei C
 
 **Fazit Checkpoint 2: Kein vollwertiger zweiter Beleg wie Checkpoint 1 – dafür aber ein klarer, harter Befund zum Cron-Problem.** Die Linienwahl (Bus 16) bleibt durch Checkpoint 1 inhaltlich bestätigt; ein zweiter Beleg im echten Berufsverkehr steht noch aus.
 
-**Noch offen / nächste Schritte:**
-1. Cron-Problem lösen, bevor eine mehrwöchige Dauersammlung unbeaufsichtigt laufen kann. Empfehlung: `schedule`-Trigger durch einen externen Zeitgeber ersetzen (z.B. kostenloser Cron-Dienst wie cron-job.org, der per `repository_dispatch`-API-Call den Workflow auslöst) – GitHubs eigener Scheduler ist für 5-Minuten-Takt nachweislich ungeeignet.
-2. Bei Gelegenheit einen echten Berufsverkehr-Nachweis nachholen (mehrere manuelle Läufe während 07:15–07:45 Uhr an einem Werktag, sobald der Rechner dann läuft), um Checkpoint 1 auch für den Morgen zu bestätigen – nicht mehr blockierend für den Start der Dauersammlung, aber sinnvoll zur Absicherung.
+**Noch offen / nächste Schritte (Stand vor dem Cron-Fix):**
+1. ~~Cron-Problem lösen~~ → erledigt, siehe nächster Abschnitt.
+2. Bei Gelegenheit einen echten Berufsverkehr-Nachweis nachholen (mehrere manuelle Läufe während 07:15–07:45 Uhr an einem Werktag) – nicht mehr blockierend für den Start der Dauersammlung, aber sinnvoll zur Absicherung. Braucht jetzt ohnehin keinen manuellen Termin mehr: die laufende Dauersammlung deckt den nächsten Werktagmorgen automatisch mit ab (siehe unten).
+
+## Cron-Fix: repository_dispatch statt schedule (31.08.2026)
+
+GitHubs eigener `schedule`-Trigger war für den 5-Minuten-Takt nachweislich ungeeignet (siehe Checkpoint 2 oben: nur 5 von ~180 erwarteten Läufen). Lösung: `collect.yml` löst jetzt zusätzlich auf einen `repository_dispatch`-Event (`collect-tick`) aus, der von einem externen Zeitgeber ausgelöst wird – GitHubs Scheduler wird dabei komplett umgangen. Die `schedule`-Zeile bleibt auskommentiert als dokumentierte Referenz im Workflow stehen.
+
+**Setup:**
+- Fine-grained Personal Access Token (Repository access: nur dieses Repo, Permission: `Contents: Read and write`) – lebt ausschließlich im externen Dienst, nirgends im Repo oder in dieser Dokumentation.
+- Kostenloser Account bei [cron-job.org](https://cron-job.org): Job schickt alle 5 Minuten `POST https://api.github.com/repos/Kollpapl/verspaetungskaskade-cottbus/dispatches` mit `{"event_type": "collect-tick"}` im Body, Header `Accept: application/vnd.github+json`, `Authorization: Bearer <Token>`, `X-GitHub-Api-Version: 2022-11-28`.
+
+**Verifikation (31.08.2026, 10:30–12:10 Uhr UTC, 1h40 beobachtet):**
+
+**21 von 21 erwarteten Läufen angekommen, lückenlos alle 5 Minuten, alle erfolgreich** – kein einziger Ausfall in der gesamten Beobachtungszeit. Deutlicher Unterschied zum alten Verfahren (5 Läufe in 15 Stunden).
+
+**Fazit: Cron-Problem gelöst.** Die mehrwöchige Dauersammlung kann jetzt unbeaufsichtigt laufen – auch ohne dass der lokale Rechner an ist, da cron-job.org unabhängig vom eigenen Rechner läuft. Der ursprünglich verpasste Berufsverkehr-Nachweis (Checkpoint 2) wird dadurch am nächsten Werktagmorgen automatisch mit dichter Abdeckung nachgeliefert, ohne dass dafür extra ein manueller Termin nötig ist.

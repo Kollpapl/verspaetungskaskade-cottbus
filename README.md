@@ -35,7 +35,7 @@ uv run collect_delays.py   # ein Snapshot, haengt eine Zeile an data/raw/<datum>
 uv run build_sqlite.py     # baut aus allen JSONL-Dateien data/verspaetungen.sqlite neu
 ```
 
-`collect_delays.py` schreibt bewusst JSONL an, nicht direkt SQLite – Begründung und der GitHub-Actions-Workflow (`.github/workflows/collect.yml`) dazu in `ERKLAERUNG.md`. **Der Cron-Trigger im Workflow ist aktuell absichtlich auskommentiert** (nur `workflow_dispatch`, manuell auslösbar) – wird erst scharf geschaltet, nachdem zwei manuelle Läufe im echten Berufsverkehr (Werktag ~7:30/~15:30 Uhr) plausible, nicht-durchgehend-Null Verspätungswerte gezeigt haben. Status dazu in `ERKLAERUNG.md`.
+`collect_delays.py` schreibt bewusst JSONL an, nicht direkt SQLite – Begründung dazu in `ERKLAERUNG.md`. Die automatische Sammlung läuft über `.github/workflows/collect.yml`, ausgelöst per `repository_dispatch` (Event `collect-tick`) von einem externen Zeitgeber (cron-job.org, alle 5 Minuten) – GitHubs eigener `schedule`-Trigger erwies sich für den 5-Minuten-Takt als unzuverlässig (Details und Verifikation in `ERKLAERUNG.md`, Abschnitt "Cron-Fix").
 
 ## 5. Weitere Phasen
 
