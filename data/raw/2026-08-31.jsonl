@@ -119,3 +119,4 @@
 {"snapshot_time": "2026-08-31T20:10:32.753214+00:00", "feed_timestamp": 1788207018, "total_entities_in_feed": 6762, "route_id": "13108_700", "trips": []}
 {"snapshot_time": "2026-08-31T20:15:27.174061+00:00", "feed_timestamp": 1788207318, "total_entities_in_feed": 6715, "route_id": "13108_700", "trips": []}
 {"snapshot_time": "2026-08-31T20:20:26.280612+00:00", "feed_timestamp": 1788207618, "total_entities_in_feed": 6677, "route_id": "13108_700", "trips": []}
+{"snapshot_time": "2026-08-31T20:25:25.342334+00:00", "feed_timestamp": 1788207919, "total_entities_in_feed": 6649, "route_id": "13108_700", "trips": []}
