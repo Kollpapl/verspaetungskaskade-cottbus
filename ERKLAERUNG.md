@@ -103,10 +103,30 @@ Vier Läufe manuell ausgelöst (18:11, 18:17, 18:25, 18:32 Uhr), macht in Summe 
 
 **Fazit Checkpoint 1: Bus 16 liefert unter echter Last plausible, echte Verspätungssignale – der eigentliche Zweck des Health-Checks ist erfüllt.** Die Linienwahl (Bus 16 statt der toten Cottbus-Trams) ist damit inhaltlich bestätigt, unabhängig vom noch ungelösten Cron-Problem.
 
-## Checkpoint 2: Berufsverkehr (ausstehend)
+## Checkpoint 2: Berufsverkehr (31.08.2026) – Ergebnis: Fenster verpasst, Cron-Problem bestätigt schwerwiegend
 
-Geplant für morgen (31.08.2026) ca. 07:15–07:45 Uhr, gleiches Vorgehen (manuelle Läufe, da Cron noch nicht zuverlässig).
+Geplant war 07:15–07:45 Uhr mit denselben manuellen Mehrfach-Läufen wie bei Checkpoint 1. Der Rechner war in diesem Fenster aber aus (siehe Chat-Verlauf), also gab es keine manuellen Läufe – nur der Cron sollte greifen. Ergebnis beim Nachschauen (31.08.2026, gegen Mittag):
+
+**Cron-Verhalten seit dem Scharfschalten (30.08.2026, 16:17 Uhr) bis jetzt (~15 Stunden), `*/5 * * * *` konfiguriert (also theoretisch ~180 Läufe erwartet):**
+
+| Zeitpunkt (UTC) | Zeitpunkt (CEST) |
+|---|---|
+| 18:05:23 | 20:05 |
+| 20:59:56 | 22:59 |
+| 23:23:30 | 01:23 |
+| 01:26:15 | 03:26 |
+| 07:21:50 | 09:21 |
+
+**Nur 5 automatische Läufe in 15 Stunden statt der konfigurierten ~180** – im Schnitt alle 2-3 Stunden statt alle 5 Minuten. Das ist kein einmaliger Anlauf-Jitter mehr (wie am 30.08. noch vermutet), sondern ein durchgehendes Muster über die ganze Nacht. Passt zu einem bekannten, von GitHub selbst dokumentierten Verhalten: Sub-stündliche `schedule`-Trigger (wie `*/5 * * * *`) werden bei GitHub Actions ausdrücklich nicht garantiert und können bei Last "verzögert oder ausgesetzt" werden – in der Praxis heißt das hier: der Cron ist für diesen Anwendungsfall (5-Minuten-Takt, private Repos mit wenig sonstiger Aktivität) faktisch unbrauchbar, nicht nur unzuverlässig.
+
+**Folge für Checkpoint 2:** Nur ein einziger Snapshot landete überhaupt in Fenster-Nähe (09:21 Uhr CEST – schon ~1,5h nach dem eigentlichen Berufsverkehrs-Ziel 07:15–07:45 Uhr). Auswertung dieses einen Snapshots:
+
+- 9 Fahrten, 176 Haltestellen-Updates
+- 8 von 176 (≈4,5%) zeigen einen plausiblen, von 0 abweichenden Wert, 0 unplausible Ausreißer
+- Feed und Bus 16 liefern also weiterhin echte Daten – aber mit nur einem Snapshot lässt sich kein Kaskaden-Muster über Zeit beobachten, und außerhalb der eigentlichen Spitze ist eine niedrigere Quote (4,5% vs. 16% bei Checkpoint 1) plausibel und kein Alarmsignal.
+
+**Fazit Checkpoint 2: Kein vollwertiger zweiter Beleg wie Checkpoint 1 – dafür aber ein klarer, harter Befund zum Cron-Problem.** Die Linienwahl (Bus 16) bleibt durch Checkpoint 1 inhaltlich bestätigt; ein zweiter Beleg im echten Berufsverkehr steht noch aus.
 
 **Noch offen / nächste Schritte:**
-1. Checkpoint 2 morgen früh durchführen und auswerten.
-2. Cron-Problem klären, bevor die eigentliche mehrwöchige Dauersammlung wirklich unbeaufsichtigt laufen kann – aktuell würde ohne manuelles Nachhelfen praktisch nichts gesammelt.
+1. Cron-Problem lösen, bevor eine mehrwöchige Dauersammlung unbeaufsichtigt laufen kann. Empfehlung: `schedule`-Trigger durch einen externen Zeitgeber ersetzen (z.B. kostenloser Cron-Dienst wie cron-job.org, der per `repository_dispatch`-API-Call den Workflow auslöst) – GitHubs eigener Scheduler ist für 5-Minuten-Takt nachweislich ungeeignet.
+2. Bei Gelegenheit einen echten Berufsverkehr-Nachweis nachholen (mehrere manuelle Läufe während 07:15–07:45 Uhr an einem Werktag, sobald der Rechner dann läuft), um Checkpoint 1 auch für den Morgen zu bestätigen – nicht mehr blockierend für den Start der Dauersammlung, aber sinnvoll zur Absicherung.
