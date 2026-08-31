@@ -1,16 +1,19 @@
 name: collect-delays
 
 on:
-  # Cron scharf seit 30.08.2026, 16:17 Uhr -- bewusst *jetzt* aktiviert statt zwei
-  # einzelne manuelle Laeufe praezise auf Feierabend-/Berufsverkehr zu timen (dafuer
-  # haette es eine externe Zeitsteuerung mit eigenem GitHub-Zugang gebraucht, unnoetiger
-  # Umweg). GitHub Actions' eigener Scheduler deckt so oder so beide Fenster ab -- den
-  # Sonntagabend, den Montag-Berufsverkehr ab 07:30 Uhr und alles dazwischen. Die ersten
-  # ~18h Rohdaten (data/raw/2026-08-3{0,1}.jsonl) sind der eigentliche Health-Check:
-  # zeigen die Verspaetungswerte unter echter Last plausible, von 0 abweichende Werte?
-  # Siehe ERKLAERUNG.md fuer die Auswertung dazu, sobald verfuegbar.
-  schedule:
-    - cron: "*/5 * * * *"
+  # Ausprobiert 30.08.2026, 16:17 Uhr -- GitHubs eigener `schedule`-Trigger fuer
+  # */5-Minuten-Takt ist nachweislich unzuverlaessig: in ~15h nur 5 von ~180
+  # erwarteten Laeufen (siehe ERKLAERUNG.md, Abschnitt "Checkpoint 2"). Passt zu
+  # GitHubs eigener Doku, dass sub-stuendliche schedule-Trigger bei Last verzoegert
+  # oder ausgesetzt werden koennen -- kein Bug, sondern dokumentiertes Verhalten.
+  # Deshalb bewusst NICHT mehr aktiv, nur als Referenz stehen gelassen:
+  # schedule:
+  #   - cron: "*/5 * * * *"
+  #
+  # Stattdessen: externer Zeitgeber (cron-job.org o.ae.) loest per repository_dispatch
+  # aus, siehe ERKLAERUNG.md Abschnitt "Cron-Fix" fuer Setup.
+  repository_dispatch:
+    types: [collect-tick]
   workflow_dispatch:
 
 concurrency:
