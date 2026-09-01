@@ -129,7 +129,9 @@ Geplant war 07:15–07:45 Uhr mit denselben manuellen Mehrfach-Läufen wie bei C
 
 **Noch offen / nächste Schritte (Stand vor dem Cron-Fix):**
 1. ~~Cron-Problem lösen~~ → erledigt, siehe nächster Abschnitt.
-2. Bei Gelegenheit einen echten Berufsverkehr-Nachweis nachholen (mehrere manuelle Läufe während 07:15–07:45 Uhr an einem Werktag) – nicht mehr blockierend für den Start der Dauersammlung, aber sinnvoll zur Absicherung. Braucht jetzt ohnehin keinen manuellen Termin mehr: die laufende Dauersammlung deckt den nächsten Werktagmorgen automatisch mit ab (siehe unten).
+2. ~~Echten Berufsverkehr-Nachweis nachholen~~ → erledigt, kam am 01.09.2026 automatisch über die Dauersammlung mit (siehe "Langzeit-Nachkontrolle" unten). Kein weiterer manueller Termin nötig.
+
+**Ab hier läuft nur noch die reine Datensammlung im Hintergrund** – mindestens 3–4 Wochen, bevor Phase 4 (explorative Analyse) sinnvoll wird. Kein aktiver Handlungsbedarf, siehe "Cron-Fix"-Abschnitt für den Langzeitstatus.
 
 ## Cron-Fix: repository_dispatch statt schedule (31.08.2026)
 
@@ -144,3 +146,7 @@ GitHubs eigener `schedule`-Trigger war für den 5-Minuten-Takt nachweislich unge
 **21 von 21 erwarteten Läufen angekommen, lückenlos alle 5 Minuten, alle erfolgreich** – kein einziger Ausfall in der gesamten Beobachtungszeit. Deutlicher Unterschied zum alten Verfahren (5 Läufe in 15 Stunden).
 
 **Fazit: Cron-Problem gelöst.** Die mehrwöchige Dauersammlung kann jetzt unbeaufsichtigt laufen – auch ohne dass der lokale Rechner an ist, da cron-job.org unabhängig vom eigenen Rechner läuft. Der ursprünglich verpasste Berufsverkehr-Nachweis (Checkpoint 2) wird dadurch am nächsten Werktagmorgen automatisch mit dichter Abdeckung nachgeliefert, ohne dass dafür extra ein manueller Termin nötig ist.
+
+**Langzeit-Nachkontrolle (01.09.2026, 09:10 Uhr UTC – 22h40 seit dem letzten Check beobachtet):** 268 von ~273 erwarteten Läufen angekommen, **0 Fehlschläge**. Eine einzige unruhige Phase nachts zwischen 04:55–05:40 Uhr UTC (drei Lücken statt exakt alle 5 Minuten, vermutlich kurzer Hänger bei cron-job.org oder der GitHub-API), sonst durchgehend im 5-Minuten-Takt. Damit bestätigt: der Fix hält auch über einen vollen Tag/Nacht-Zyklus, in dem der eigene Rechner die ganze Zeit aus war – die Sammlung läuft nachweislich unabhängig vom eigenen PC.
+
+**Bonus – Berufsverkehr-Nachweis kam automatisch mit:** Der 01.09.2026 ist ein Dienstag (Werktag). Genau in diese Nacht-Lücke fiel zufällig auch das Zielfenster 07:15–07:45 Uhr CEST (=05:15–05:45 UTC), trotzdem liegen 7 Snapshots im Fenster 05:02–05:55 Uhr UTC vor. Anteil plausibler, von 0 abweichender Verspätungen steigt darin von 15/108 (~14%) auf bis zu 67/156 (~43%) – deutlich höher als der Feierabend-Wert aus Checkpoint 1 (~16%). Damit ist der ursprünglich verpasste Berufsverkehr-Nachweis (Checkpoint 2) durch die laufende Dauersammlung faktisch nachgeliefert, ganz ohne manuellen Eingriff – wie in Schritt 6 des Fix-Plans vorhergesagt.
