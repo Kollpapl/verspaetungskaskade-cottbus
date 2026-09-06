@@ -275,3 +275,4 @@
 {"snapshot_time": "2026-09-06T22:50:31.080609+00:00", "feed_timestamp": 1788735006, "total_entities_in_feed": 6036, "route_id": "13108_700", "trips": []}
 {"snapshot_time": "2026-09-06T22:55:58.385111+00:00", "feed_timestamp": 1788735337, "total_entities_in_feed": 6036, "route_id": "13108_700", "trips": []}
 {"snapshot_time": "2026-09-06T23:00:45.781444+00:00", "feed_timestamp": 1788735637, "total_entities_in_feed": 6033, "route_id": "13108_700", "trips": []}
+{"snapshot_time": "2026-09-06T23:05:24.516519+00:00", "feed_timestamp": 1788735907, "total_entities_in_feed": 5992, "route_id": "13108_700", "trips": []}
