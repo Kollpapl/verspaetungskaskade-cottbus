@@ -150,3 +150,24 @@ GitHubs eigener `schedule`-Trigger war für den 5-Minuten-Takt nachweislich unge
 **Langzeit-Nachkontrolle (01.09.2026, 09:10 Uhr UTC – 22h40 seit dem letzten Check beobachtet):** 268 von ~273 erwarteten Läufen angekommen, **0 Fehlschläge**. Eine einzige unruhige Phase nachts zwischen 04:55–05:40 Uhr UTC (drei Lücken statt exakt alle 5 Minuten, vermutlich kurzer Hänger bei cron-job.org oder der GitHub-API), sonst durchgehend im 5-Minuten-Takt. Damit bestätigt: der Fix hält auch über einen vollen Tag/Nacht-Zyklus, in dem der eigene Rechner die ganze Zeit aus war – die Sammlung läuft nachweislich unabhängig vom eigenen PC.
 
 **Bonus – Berufsverkehr-Nachweis kam automatisch mit:** Der 01.09.2026 ist ein Dienstag (Werktag). Genau in diese Nacht-Lücke fiel zufällig auch das Zielfenster 07:15–07:45 Uhr CEST (=05:15–05:45 UTC), trotzdem liegen 7 Snapshots im Fenster 05:02–05:55 Uhr UTC vor. Anteil plausibler, von 0 abweichender Verspätungen steigt darin von 15/108 (~14%) auf bis zu 67/156 (~43%) – deutlich höher als der Feierabend-Wert aus Checkpoint 1 (~16%). Damit ist der ursprünglich verpasste Berufsverkehr-Nachweis (Checkpoint 2) durch die laufende Dauersammlung faktisch nachgeliefert, ganz ohne manuellen Eingriff – wie in Schritt 6 des Fix-Plans vorhergesagt.
+
+## Kostenloses Kontingent aufgebraucht (11.09.2026)
+
+**Befund:** Bei einer Routineprüfung (`gh api .../actions/runs`) zeigte sich, dass alle Läufe seit dem **07.09.2026, 20:20 Uhr UTC** fehlschlugen – 3,5 Tage Sammellücke, unbemerkt, weil niemand aktiv hingeschaut hat. GitHubs Fehlermeldung: *"recent account payments have failed or your spending limit needs to be increased"*.
+
+**Ursache, konkret nachgerechnet:** Kein echtes Zahlungsproblem, sondern das kostenlose GitHub-Actions-Kontingent für private Repos (**2000 Minuten/Monat**) war aufgebraucht. Vom 31.08. (Cron-Fix) bis zum 07.09. lief der 5-Minuten-Takt **7,4 Tage durchgehend zuverlässig** – das sind ca. 2.134 Läufe, und GitHub rechnet jeden Lauf mit mindestens 1 abgerechneter Minute ab. 2.134 Minuten > 2.000 Minuten Freikontingent, exakt an dem Punkt gerissen, an dem die Läufe stoppten. Das Spending-Limit steht auf 0 $ (Standard ohne hinterlegte Zahlungsmethode) – GitHub startet dann einfach keine weiteren Läufe, statt automatisch zu belasten. Es wurde also nichts abgebucht, aber die Sammlung stand still.
+
+**Strukturelles Problem:** Bei durchgehendem 5-Minuten-Takt hätte sich das jeden Monat nach ~7 Tagen wiederholt (Rest des Monats: Blackout) – für eine mehrwöchige Dauersammlung nicht tragbar.
+
+**Fix: Takt auf 30 Minuten gestreckt** (in cron-job.org konfiguriert, keine Codeänderung am Workflow nötig – der Takt lebt komplett im externen Zeitgeber, nicht in `collect.yml`):
+
+| Takt | Läufe/Tag | Min/Monat | Anteil Freikontingent |
+|---|---|---|---|
+| 5 Min (alt) | 288 | 8.640 | 432% |
+| 20 Min | 72 | 2.160 | 108% – reicht nicht |
+| 25 Min | 58 | 1.728 | 86% |
+| **30 Min (gewählt)** | 48 | 1.440 | **72%** – komfortabler Puffer für manuelle Testläufe |
+
+**Trade-off, bewusst akzeptiert:** Gröbere Zeitauflösung der Snapshots (alle 30 statt alle 5 Minuten) – muss in Phase 4 mitgedacht werden, ähnlich wie die bereits dokumentierten unregelmäßigen Abständen durch den `schedule`-Trigger vorher. Im Gegenzug: 0 € Kosten, keine hinterlegte Zahlungsmethode nötig, kein monatlich wiederkehrender Blackout.
+
+**Offen:** Der aktuelle Monat ist bis zum Kontingent-Reset weiterhin blockiert (GitHub setzt das Kontingent monatlich zurück, genaues Reset-Datum steht im GitHub-Billing-Dashboard unter "Plans and usage" – wurde noch nicht geprüft). Bis dahin sammelt sich nichts, danach greift automatisch der neue 30-Minuten-Takt.

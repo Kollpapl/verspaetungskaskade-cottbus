@@ -35,7 +35,7 @@ uv run collect_delays.py   # ein Snapshot, haengt eine Zeile an data/raw/<datum>
 uv run build_sqlite.py     # baut aus allen JSONL-Dateien data/verspaetungen.sqlite neu
 ```
 
-`collect_delays.py` schreibt bewusst JSONL an, nicht direkt SQLite – Begründung dazu in `ERKLAERUNG.md`. Die automatische Sammlung läuft über `.github/workflows/collect.yml`, ausgelöst per `repository_dispatch` (Event `collect-tick`) von einem externen Zeitgeber (cron-job.org, alle 5 Minuten) – GitHubs eigener `schedule`-Trigger erwies sich für den 5-Minuten-Takt als unzuverlässig (Details und Verifikation in `ERKLAERUNG.md`, Abschnitt "Cron-Fix").
+`collect_delays.py` schreibt bewusst JSONL an, nicht direkt SQLite – Begründung dazu in `ERKLAERUNG.md`. Die automatische Sammlung läuft über `.github/workflows/collect.yml`, ausgelöst per `repository_dispatch` (Event `collect-tick`) von einem externen Zeitgeber (cron-job.org, alle 30 Minuten) – GitHubs eigener `schedule`-Trigger erwies sich für einen dichten Takt als unzuverlässig, und ein zu dichter `repository_dispatch`-Takt (ursprünglich 5 Minuten) hat das kostenlose GitHub-Actions-Kontingent (2000 Min/Monat) nach ~7 Tagen aufgebraucht (Details und Verifikation in `ERKLAERUNG.md`, Abschnitte "Cron-Fix" und "Kostenloses Kontingent aufgebraucht").
 
 ## 5. Weitere Phasen
 
