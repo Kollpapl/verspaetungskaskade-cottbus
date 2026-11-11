@@ -314,3 +314,9 @@ Zwei Unschärfen ließen sich in den alten Daten nicht mehr reparieren: (a) ist 
 1. Änderung pushen, dann **2–3 Wochen** mit den neuen Feldern sammeln. Damit lassen sich echte Pünktlichkeit und tatsächliche Haltezeit am Hauptbahnhof direkt messen (Abfahrt minus Ankunft).
 2. Dichteren Takt prüfen. Bei einem öffentlichen Repo hat GitHub Actions keine Minutengrenze, dann ginge wieder alle 5 statt alle 30 Minuten. Mehr Messpunkte pro Fahrt heißt: Die Endverspätung wird sichtbar.
 3. **Phase 5** kann mit dem Hauptbahnhof als Kandidat anfangen: Was ändert sich an der Endverspätung, wenn dort 1 oder 2 Minuten Haltezeit eingeplant werden?
+
+### Repo öffentlich (11.11.2026)
+
+Damit ein dichterer Takt kostenlos möglich ist, ist das Repo seit dem 11.11. **öffentlich**, denn öffentliche Repos haben bei GitHub Actions keine Minutengrenze. Vorher wurde geprüft, dass keine Zugangsschlüssel in der Historie stehen. Das Token für cron-job.org lebt nur dort. Private E-Mail-Adressen in alten Commits wurden per `git filter-repo --mailmap` durch die anonyme GitHub-Adresse ersetzt. Inhalt und Commit-Anzahl sind unverändert, nur die Commit-IDs sind neu.
+
+**Takt:** Der Takt wird in cron-job.org eingestellt (nicht in `collect.yml`). Er kann jetzt wieder auf **5 Minuten**. Speicherbedarf grob: heute etwa 0,8 MB pro Tag bei 30 Minuten; mit 5-Minuten-Takt und den neuen Feldern werden es etwa 6–7 MB pro Tag, also rund 200 MB im Monat im Git-Repo. Für die restliche Projektlaufzeit ist das unkritisch. Nach Projektende den Zeitgeber abschalten.
