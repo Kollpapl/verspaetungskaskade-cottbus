@@ -173,3 +173,144 @@ GitHubs eigener `schedule`-Trigger war für den 5-Minuten-Takt nachweislich unge
 **Offen:** Der aktuelle Monat ist bis zum Kontingent-Reset weiterhin blockiert (GitHub setzt das Kontingent monatlich zurück, genaues Reset-Datum steht im GitHub-Billing-Dashboard unter "Plans and usage" – wurde noch nicht geprüft). Bis dahin sammelt sich nichts, danach greift automatisch der neue 30-Minuten-Takt.
 
 **Nachkontrolle (25.09.2026, 10:32 Uhr UTC):** Der 30-Minuten-Takt ist korrekt aktiv (Läufe kommen zuverlässig alle 30 Min an), aber **jeder einzelne Lauf failt weiterhin mit derselben Meldung wie am 11.09.** – die Sperre gilt für den ganzen restlichen Monat, nicht nur bis zum Fix. Letzter erfolgreicher Lauf bleibt **07.09.2026, 20:20 Uhr UTC** – zu diesem Zeitpunkt also **17,5 Tage durchgehender Ausfall, keine einzige neue Zeile seit `2026-09-07.jsonl`**. Reset laut Nutzerangabe erst zum Monatsende (~01.10.), 30-Min-Takt greift danach automatisch, keine weitere Aktion nötig. Für die "mindestens 3–4 Wochen"-Anforderung aus dem Sechs-Phasen-Plan bedeutet das: die durchgehende Sammelphase startet de facto ab dem Reset neu, Phase 4 realistisch nicht vor **Ende Oktober** statt wie ursprünglich gedacht Ende September.
+
+## Phase 3 – Kaskade definiert (11.11.2026)
+
+**Datengrundlage:** 01.10.–11.11.2026, 43 Betriebstage, 1.988 Snapshots (alle 30 Min), **2.610 Fahrten** von Bus 16. Ausgewertet mit `phase3_kaskaden.py`.
+
+### Erst verstehen, was im Feed eigentlich steht
+
+Beim Auszählen aller 155.186 Haltestellen-Einträge zeigte sich: Der VBB-Feed kennt pro Haltestelle genau **drei Muster** (Ankunfts-/Abfahrtsverspätung):
+
+| Muster | Anzahl | Bedeutung |
+|---|---|---|
+| `0 / X` | 10.048 | Die **Abfahrt wurde gemeldet** – das ist ein echter Messpunkt |
+| `X / X` | 19.576 | Der Wert vom letzten Messpunkt wird nur **weitergereicht** (Prognose für die restliche Strecke) |
+| `0 / 0` | 125.562 | **Keine Information** |
+
+Wichtigste Konsequenz: **`0` heißt im Feed meistens nicht „pünktlich“, sondern „weiß ich nicht“.** Hätte man einfach alle Werte gemittelt, wäre Bus 16 viel pünktlicher erschienen, als er ist, und die Prognosen hätten die Messungen kopiert. Deshalb zählen in der Analyse **nur die Messpunkte**. Preis dafür: Eine Abfahrt mit exakt 0 Sekunden Verspätung sieht aus wie „keine Info“. Man sieht also, wie eine Verspätung schrumpft, aber nicht sicher, wann sie ganz auf 0 fällt.
+
+Weitere Regeln:
+- **Eine Fahrt** = Betriebstag + `trip_id`. Die `trip_id`s wiederholen sich täglich, und der Betriebstag endet um 3 Uhr nachts. Sieht man dieselbe Fahrt in mehreren Snapshots, gilt der neueste Wert. Eine Prognose überschreibt aber nie eine Messung.
+- **Unplausibel** (verworfen, 43 Punkte): mehr als 25 Min zu spät oder mehr als 5 Min zu früh. Typischer Fall: Ein Bus fährt am Start gar nicht los, und die „Verspätung“ wächst dann auf 40 Minuten. Das ist ein Ausfall, keine Kaskade.
+
+### Die Definition
+
+> **Kaskade** = mindestens **3 aufeinanderfolgende Messpunkte** einer Fahrt, an denen die Verspätung **spürbar** ist (mindestens 1 Minute) und gegenüber dem vorigen Messpunkt **nicht kleiner** wird (Toleranz 30 Sekunden).
+> **Entstehungsort** = eine Haltestelle, an der die Verspätung gegenüber dem vorigen Messpunkt um mindestens 1 Minute **wächst**.
+
+Warum diese Zahlen:
+- **1 Minute** ist die Auflösung, in der Fahrgäste und Fahrpläne denken.
+- **30 Sekunden Toleranz** fängt Rundung und Ungenauigkeit der Ortung ab.
+- **3 Punkte**, weil bei zweien noch Zufall sein kann. Ab drei hält die Verspätung über eine Strecke an.
+
+Alle Schwellen stehen oben im Skript und lassen sich zum Testen verschieben (Sensitivitätsprüfung für Phase 4).
+
+> **Update aus Phase 4:** Die Schwellen wurden auf **2 Minuten spürbar / 75 s Toleranz / Zuwachs ab 90 s** angehoben, weil der Feed in Ein-Minuten-Schritten rauscht (siehe unten). Die Zahlen in diesem Abschnitt stammen noch von der ersten Version (60/30/60). Mit den neuen Schwellen haben **32 %** statt 41 % der Fahrten eine Kaskade.
+
+### Erste Zahlen
+
+| | |
+|---|---|
+| Fahrten mit mindestens 1 Messpunkt | 2.182 (84 %) |
+| Fahrten mit mindestens 2 Messpunkten (nur hier ist ein **Verlauf** sichtbar) | 1.661 (64 %) |
+| Messpunkte pro Fahrt (Median) | 3 |
+| **Fahrten mit Kaskade** | **683 = 41 % der Fahrten mit Verlauf** |
+| Zuwachs innerhalb einer Kaskade (Median) | 167 s ≈ 2¾ min |
+
+Häufigste **Startpunkte** von Kaskaden: Stadthalle Puschkinpromenade (115), Stadtverwaltung (84), Stadthalle Post (80), Welzower Str./Thiemstr. (69), BTU / Campus Sachsendorf Nord (69), BTU / Mensa (48). Die Innenstadt um die Stadthalle sticht also klar heraus.
+
+Wo die Verspätung am häufigsten **wächst** (gegenüber dem vorigen Messpunkt):
+
+| Haltestelle | wächst | schrumpft | Messpaare |
+|---|---|---|---|
+| Finsterwalder Str. | 346 | 6 | 451 |
+| Spreewaldbahnhof | 309 | 19 | 433 |
+| Hauptbahnhof (Richtung A) | 176 | 33 | 263 |
+| Welzower Str./Thiemstr. | 175 | 35 | 297 |
+| Hauptbahnhof (Richtung B) | 169 | 152 | 415 |
+| Ausbesserungswerk | 169 | 28 | 275 |
+
+### Was man ehrlich dazusagen muss (für Phase 4)
+
+1. **Verdächtig gleichmäßig:** An Finsterwalder Str. und Spreewaldbahnhof wächst die Verspätung meist um **genau etwa eine Minute** (Median +65 s bzw. +62 s, mittlere Hälfte 55–75 s). In beiden Fällen kommt der Bus fast immer direkt vom Hauptbahnhof. Ein echter Stau würde breiter streuen. Laut Fahrplan sind für Hauptbahnhof → Finsterwalder Str. 2 Minuten eingeplant. Zwei Erklärungen sind möglich: Entweder ist die Fahrzeit dort systematisch eine Minute zu knapp (das wäre ein echter, sehr konkreter Befund), oder es ist ein Mess-Effekt. Dann würde etwa die Abfahrt am Hauptbahnhof anders erfasst als an normalen Haltestellen. **Muss in Phase 4 geklärt werden**, bevor daraus ein Ergebnis wird.
+2. **Grobe Abtastung:** Bei 30 Minuten zwischen zwei Snapshots erwischt man jede Fahrt nur ein- bis zweimal. Daher kommt der Median von nur 3 Messpunkten pro Fahrt, und die **Endverspätung** fehlt oft. Für Phase 5/6 („Puffer X senkt die Endverspätung um Z %“) wäre ein dichterer Takt deutlich besser. Kostenlos ginge das, wenn das Repo **öffentlich** wäre, denn öffentliche Repos haben bei GitHub Actions keine Minutengrenze. Mehr als die öffentlichen VBB-Daten steht nicht drin, der Zugangsschlüssel liegt nur bei cron-job.org. Das ist eine Entscheidung für das Team.
+3. **Tage mit wenig Fahrten:** 03.10. (Tag der Deutschen Einheit) und 31.10. (Reformationstag, in Brandenburg Feiertag) sind durch Feiertage erklärt. Am **02.11. (Montag)** gab es nur 37 statt üblicher ~76 Fahrten im Feed, das ist ungeklärt. Das Skript listet solche Tage automatisch auf, damit sie in Phase 4 gesondert behandelt werden können.
+4. **Bus statt Tram:** Wie schon bei der Linienwahl gilt: Verspätungen mischen sich mit dem allgemeinen Autoverkehr. Ein Puffer im Fahrplan hilft gegen beides, aber die *Ursache* lässt sich nicht allein aus diesen Daten trennen.
+
+## Phase 4 – Explorative Analyse (11.11.2026)
+
+Skript: `phase4_analyse.py` (Ausgabe auch in `data/phase4_ergebnisse.txt`). Datengrundlage wie Phase 3.
+
+### Ein-Minuten-Sprünge: das Rätsel vom Hauptbahnhof ist größtenteils Rauschen
+
+Ausgezählt wurde, um wie viel sich die Verspätung zwischen zwei Messpunkten ändert:
+
+| Sprung | Anteil |
+|---|---|
+| ±0 | 32 % |
+| **genau +1 min** | **31 %** |
+| **genau −1 min** | **19 %** |
+| ±30 s | 1 % |
+| ≥ +90 s | 7 % |
+
+Echte Verkehrseffekte würden gleichmäßig streuen, auch über ±30 s. Hier sind aber **die Hälfte aller Änderungen exakt eine Minute**, und ±30 s kommt fast nie vor. Ein vollständiger Live-Abruf (11.11., mit allen Feldern) zeigt den Grund. Der Feed schreibt an einem Messpunkt die Ankunft als *pünktlich nach Plan* und nur die Abfahrt mit Verspätung. Die Plan-Zeiten haben nur ganze Minuten, also hüpft die Verspätung um ganze Minuten, sobald der Fahrplan und die wirkliche Fahrzeit um Sekunden auseinanderliegen. Ein Beispiel aus dem Abruf: 254 → 194 → 319 → 259 → 322 Sekunden. Das ist ein Zickzack um ±60 s, kein echtes Auf und Ab.
+
+**Folgen:**
+- Ein Sprung um genau eine Minute gilt ab jetzt als Rauschen. Die Schwellen in `phase3_kaskaden.py` wurden angehoben: spürbar ab 2 min, Toleranz 75 s, Zuwachs ab 90 s.
+- Die „verdächtig gleichmäßigen +1 min“ an Finsterwalder Str. und Spreewaldbahnhof aus Phase 3 waren **überwiegend dieses Rauschen**. An Finsterwalder Str. bleiben von 346 Zuwächsen nur **96** echte (über 90 s) übrig.
+
+### Wie stark hängt das Ergebnis an der Definition?
+
+| Schwellen (spürbar / Toleranz / Mindestlänge) | Fahrten mit Kaskade | häufigster Start |
+|---|---|---|
+| 60 s / 30 s / 3 (Phase-3-Version) | 41 % | Stadthalle Puschkinpromenade |
+| 60 s / 75 s / 3 | 57 % | Stadthalle Puschkinpromenade |
+| **120 s / 75 s / 3 (gewählt)** | **32 %** | **Stadthalle Puschkinpromenade** |
+| 180 s / 75 s / 3 | 19 % | Hauptbahnhof |
+| 120 s / 75 s / 4 | 21 % | Stadthalle Puschkinpromenade |
+
+**Lesart:** *Wie oft* es Kaskaden gibt, hängt stark an der Definition (19–57 %). Eine Prozentzahl darf deshalb nie ohne die Definition daneben genannt werden. *Wo* sie beginnen, ist dagegen stabil. Das ist die belastbare Aussage.
+
+### Ergebnis 1: Viele Busse sind schon am Start zu spät
+
+Stadthalle Puschkinpromenade ist die **Starthaltestelle** Richtung Uhlandstr. Kaskaden, die dort beginnen, heißen also: Der Bus fährt schon verspätet los. Vermutlich kommt die Verspätung von der vorigen Fahrt mit, weil die Wendezeit nicht reicht. Bei den Fahrten, deren Abfahrt am Start gemessen wurde, waren **46 %** (Richtung Uhlandstr., 291 Fahrten) bzw. **42 %** (Richtung Stadthalle, 73 Fahrten) mindestens 2 min zu spät.
+⚠️ Diese Prozentzahl ist **zu hoch geschätzt**: Eine pünktliche Abfahrt (genau 0) ist im Feed nicht von „keine Info“ zu unterscheiden und fehlt deshalb in der Zählung. Die Aussage „ein erheblicher Teil fährt verspätet los“ hält, die genaue Zahl nicht.
+
+### Ergebnis 2: Der kritische Abschnitt ist der Hauptbahnhof, in beide Richtungen
+
+Wo die Verspätung um mehr als 90 s wächst (also echte Zuwächse, kein Rauschen):
+
+| Richtung | Haltestelle (Zuwachs gegenüber dem Messpunkt davor) | wächst | schrumpft | von |
+|---|---|---|---|---|
+| → Stadthalle | Spreewaldbahnhof (direkt nach Hbf) | 122 | 1 | 433 |
+| → Uhlandstr. | Finsterwalder Str. (direkt nach Hbf) | 96 | 2 | 451 |
+| → Uhlandstr. | Hauptbahnhof | 79 | 7 | 415 |
+| → Stadthalle | Hauptbahnhof | 63 | 2 | 263 |
+| → Stadthalle | Welzower Str./Thiemstr. | 51 | 2 | 297 |
+| → Stadthalle | BTU / Campus Sachsendorf (Nord) | 45 | 3 | 161 |
+
+Die vier größten Zuwachs-Stellen liegen alle **am oder direkt nach dem Hauptbahnhof**. Im Fahrplan (GTFS) hat der Bus dort **0 Minuten Haltezeit**. Das ist eine naheliegende Erklärung, denn am Bahnhof steigen viele Leute mit Gepäck ein und aus, und eventuell wartet der Bus auf Züge. Bestätigt ist das noch nicht, siehe „Nächste Schritte“.
+
+**Abbau** passiert dagegen kaum: Die Stelle mit dem stärksten Rückgang schafft das nur 10–12-mal (Stadthalle Post, Welzower Str./Klinikum, Waldweg). Wer einmal verspätet ist, bleibt es also bis zum Ende. Genau das ist das Kaskaden-Verhalten aus der Fragestellung.
+
+### Ergebnis 3: Die Tageszeit passt zum Verkehr
+
+Anteil der Fahrten mit Kaskade (Fahrten mit Verlauf):
+
+| | 04–07 | 07–09 | 09–13 | 13–16 | 16–19 | 19–24 |
+|---|---|---|---|---|---|---|
+| Mo–Fr | 24 % | **37 %** | 29 % | **40 %** | **39 %** | 25 % |
+| Sa/So | (n=3) | 24 % | 19 % | 25 % | 27 % | 21 % |
+
+Im Berufs- und Schulverkehr gibt es deutlich mehr Kaskaden als abends und am Wochenende. Das spricht dafür, dass nach dem Herausfiltern des Rauschens ein **echtes Verkehrssignal** übrig bleibt.
+
+### Sammelskript verbessert (Phase 4)
+
+Zwei Unschärfen ließen sich in den alten Daten nicht mehr reparieren: (a) ist eine 0 pünktlich oder fehlt sie, und (b) welche Haltestellen hatte der Bus beim Snapshot schon passiert? Der Feed liefert beides mit, `collect_delays.py` hat es nur nicht gespeichert. Seit Phase 4 speichert das Skript zusätzlich `arrival_time`, `departure_time`, ob die Verspätung wirklich gesetzt war (`*_delay_gesetzt`), `start_date` und `update_timestamp`. Die alten Felder bleiben gleich, alle Auswertungen laufen weiter. Probelauf am 11.11. gegen den Live-Feed war erfolgreich. **Wirkt erst, wenn die Änderung auf GitHub gepusht ist.**
+
+### Nächste Schritte
+
+1. Änderung pushen, dann **2–3 Wochen** mit den neuen Feldern sammeln. Damit lassen sich echte Pünktlichkeit und tatsächliche Haltezeit am Hauptbahnhof direkt messen (Abfahrt minus Ankunft).
+2. Dichteren Takt prüfen. Bei einem öffentlichen Repo hat GitHub Actions keine Minutengrenze, dann ginge wieder alle 5 statt alle 30 Minuten. Mehr Messpunkte pro Fahrt heißt: Die Endverspätung wird sichtbar.
+3. **Phase 5** kann mit dem Hauptbahnhof als Kandidat anfangen: Was ändert sich an der Endverspätung, wenn dort 1 oder 2 Minuten Haltezeit eingeplant werden?

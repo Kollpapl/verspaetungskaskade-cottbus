@@ -1,0 +1,43 @@
+1. Sprünge zwischen zwei Messpunkten (gerundet auf 30 s)
+    -120 s:    24  (0 %)
+     -90 s:   205  (3 %)
+     -60 s:  1168  (19 %)
+     -30 s:    25  (0 %)
+      +0 s:  1903  (32 %)
+     +30 s:    33  (1 %)
+     +60 s:  1839  (31 %)
+     +90 s:   146  (2 %)
+    +120 s:   266  (4 %)
+    +180 s:    65  (1 %)
+   -> genau ±1 min: 50 % aller Sprünge, ±30 s nur 1 %
+
+2. Anteil Fahrten mit Kaskade je nach Schwelle (von 1661 Fahrten mit Verlauf)
+   ab  60 s, Toleranz 30 s, ≥3 Punkte:  41 %   häufigster Start: Stadthalle Puschkinpromenade (115)
+   ab  60 s, Toleranz 75 s, ≥3 Punkte:  57 %   häufigster Start: Stadthalle Puschkinpromenade (145)
+   ab 120 s, Toleranz 75 s, ≥3 Punkte:  32 %   häufigster Start: Stadthalle Puschkinpromenade (74)  <- gewählt
+   ab 180 s, Toleranz 75 s, ≥3 Punkte:  19 %   häufigster Start: Hauptbahnhof (51)
+   ab 120 s, Toleranz 75 s, ≥4 Punkte:  21 %   häufigster Start: Stadthalle Puschkinpromenade (58)
+
+3. Abfahrt an der Starthaltestelle (nur Fahrten, bei denen der Start gemessen wurde)
+   → Uhlandstr.: 291 Fahrten, Median 97 s, ≥2 min zu spät: 46 %   (bei 815 weiteren Fahrten war der Start nicht gemessen)
+   → Stadthalle: 73 Fahrten, Median 74 s, ≥2 min zu spät: 42 %   (bei 1003 weiteren Fahrten war der Start nicht gemessen)
+
+4. Wo wächst (≥ +90 s) bzw. schrumpft (≤ −90 s) die Verspätung?
+   → Uhlandstr.
+     wächst  96x / schrumpft   2x von 451  Finsterwalder Str.
+     wächst  79x / schrumpft   7x von 415  Hauptbahnhof
+     wächst  21x / schrumpft   1x von 223  Heinrich-Mann-Str.
+     wächst  20x / schrumpft   2x von 191  Stadtverwaltung
+     wächst  16x / schrumpft   3x von 214  Sachsendorfer Hauptstr.
+     stärkster Abbau: Stadthalle Post (10x), Welzower Str./Klinikum (10x), Spreewaldbahnhof (8x)
+   → Stadthalle
+     wächst 122x / schrumpft   1x von 433  Spreewaldbahnhof
+     wächst  63x / schrumpft   2x von 263  Hauptbahnhof
+     wächst  51x / schrumpft   2x von 297  Welzower Str./Thiemstr.
+     wächst  45x / schrumpft   3x von 161  BTU / Campus Sachsendorf (Nord)
+     wächst  11x / schrumpft   1x von  31  Kleiststr.
+     stärkster Abbau: Waldweg (12x), Sachsendorfer Hauptstr. (10x), Ausbesserungswerk (4x)
+
+5. Anteil Fahrten mit Kaskade nach Tageszeit (Fahrten mit Verlauf)
+   Mo–Fr  04–07:  24 % (n=145)   07–09:  37 % (n=169)   09–13:  29 % (n=330)   13–16:  40 % (n=297)   16–19:  39 % (n=280)   19–24:  25 % (n=138)
+   Sa/So  04–07: 100 % (n=3)   07–09:  24 % (n=21)   09–13:  19 % (n=43)   13–16:  25 % (n=92)   16–19:  27 % (n=90)   19–24:  21 % (n=53)

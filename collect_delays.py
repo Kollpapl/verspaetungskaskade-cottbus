@@ -53,9 +53,24 @@ def collect() -> None:
                     "arrival_delay": a,
                     "departure_delay": d,
                     "plausible": plausible,
+                    # Seit Phase 4 zusätzlich (siehe ERKLAERUNG.md): absolute Zeiten und ob der
+                    # Feed die Verspätung wirklich mitgeschickt hat. Ohne das ist eine 0 nicht von
+                    # "keine Info" zu unterscheiden, und man weiß nicht, welche Haltestellen der Bus
+                    # zum Snapshot-Zeitpunkt schon passiert hatte.
+                    "arrival_time": stu.arrival.time or None if stu.HasField("arrival") else None,
+                    "departure_time": stu.departure.time or None if stu.HasField("departure") else None,
+                    "arrival_delay_gesetzt": stu.HasField("arrival") and stu.arrival.HasField("delay"),
+                    "departure_delay_gesetzt": stu.HasField("departure") and stu.departure.HasField("delay"),
                 }
             )
-        trips.append({"trip_id": tu.trip.trip_id, "stops": stops})
+        trips.append(
+            {
+                "trip_id": tu.trip.trip_id,
+                "start_date": tu.trip.start_date or None,
+                "update_timestamp": tu.timestamp or None,
+                "stops": stops,
+            }
+        )
 
     record = {
         "snapshot_time": now.isoformat(),

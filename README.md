@@ -39,7 +39,11 @@ uv run build_sqlite.py     # baut aus allen JSONL-Dateien data/verspaetungen.sql
 
 ## 5. Weitere Phasen
 
-Noch nicht begonnen – Phase 3 (Kaskade sauber definieren), Phase 4 (explorative Analyse), Phase 5 (Modell), Phase 6 (Nutzen beziffern). Reihenfolge und Details siehe `ERKLAERUNG.md`.
+**Phase 3 (Kaskade definieren) – erledigt 11.11.2026:** `uv run phase3_kaskaden.py` wertet alle Snapshots ab 01.10. aus und schreibt `data/phase3_fahrten.csv` (eine Zeile pro Fahrt) und `data/phase3_haltestellen.csv` (pro Haltestelle: wie oft wächst/schrumpft die Verspätung). Für die Haltestellennamen braucht es ein statisches GTFS-ZIP in `data/` (`curl -L -o data/gtfs_$(date +%F).zip https://www.vbb.de/vbbgtfs`). Definition und erste Zahlen: `ERKLAERUNG.md`, Abschnitt "Phase 3".
+
+**Phase 4 (explorative Analyse) – erster Durchgang 11.11.2026:** `uv run phase4_analyse.py` (Ergebnis auch in `data/phase4_ergebnisse.txt`). Kernbefunde: Der Feed rauscht in Ein-Minuten-Schritten (Schwellen deshalb angehoben), der kritische Abschnitt ist der Hauptbahnhof in beide Richtungen, und viele Busse fahren schon verspätet los. Details in `ERKLAERUNG.md`, Abschnitt "Phase 4".
+
+Noch offen: Phase 5 (Modell), Phase 6 (Nutzen beziffern).
 
 ## Datenquelle – wichtig zu wissen
 
