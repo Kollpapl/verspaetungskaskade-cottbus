@@ -45,3 +45,4 @@
 {"snapshot_time": "2026-11-13T22:00:50.186872+00:00", "feed_timestamp": 1794563358, "total_entities_in_feed": 0, "route_id": "13108_700", "trips": []}
 {"snapshot_time": "2026-11-13T22:30:47.182607+00:00", "feed_timestamp": 1794608176, "total_entities_in_feed": 0, "route_id": "13108_700", "trips": []}
 {"snapshot_time": "2026-11-13T23:00:49.055072+00:00", "feed_timestamp": 1794610839, "total_entities_in_feed": 5904, "route_id": "13108_700", "trips": []}
+{"snapshot_time": "2026-11-13T23:30:49.277481+00:00", "feed_timestamp": 1794612620, "total_entities_in_feed": 5706, "route_id": "13108_700", "trips": []}
